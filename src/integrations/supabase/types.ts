@@ -14,7 +14,215 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analysis_results: {
+        Row: {
+          analysis_type: string
+          created_at: string
+          frame_id: string
+          id: string
+          issue: string
+          severity: string
+          suggestion: string
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string
+          frame_id: string
+          id?: string
+          issue: string
+          severity: string
+          suggestion: string
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string
+          frame_id?: string
+          id?: string
+          issue?: string
+          severity?: string
+          suggestion?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_results_frame_id_fkey"
+            columns: ["frame_id"]
+            isOneToOne: false
+            referencedRelation: "frames"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback: {
+        Row: {
+          area: string | null
+          created_at: string
+          details: string
+          frame_id: string
+          from_user_id: string
+          id: string
+          summary: string
+          to_user_id: string
+        }
+        Insert: {
+          area?: string | null
+          created_at?: string
+          details: string
+          frame_id: string
+          from_user_id: string
+          id?: string
+          summary: string
+          to_user_id: string
+        }
+        Update: {
+          area?: string | null
+          created_at?: string
+          details?: string
+          frame_id?: string
+          from_user_id?: string
+          id?: string
+          summary?: string
+          to_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_frame_id_fkey"
+            columns: ["frame_id"]
+            isOneToOne: false
+            referencedRelation: "frames"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      frames: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          author_name: string
+          content: string
+          created_at: string
+          frame_id: string | null
+          id: string
+          mentions: string[] | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          author_name: string
+          content: string
+          created_at?: string
+          frame_id?: string | null
+          id?: string
+          mentions?: string[] | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          author_name?: string
+          content?: string
+          created_at?: string
+          frame_id?: string | null
+          id?: string
+          mentions?: string[] | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_frame_id_fkey"
+            columns: ["frame_id"]
+            isOneToOne: false
+            referencedRelation: "frames"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_color: string
+          created_at: string
+          id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          avatar_color?: string
+          created_at?: string
+          id: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          avatar_color?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assignee_id: string
+          created_at: string
+          due_date: string | null
+          frame_id: string
+          id: string
+          origin: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id: string
+          created_at?: string
+          due_date?: string | null
+          frame_id: string
+          id?: string
+          origin: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string
+          created_at?: string
+          due_date?: string | null
+          frame_id?: string
+          id?: string
+          origin?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_frame_id_fkey"
+            columns: ["frame_id"]
+            isOneToOne: false
+            referencedRelation: "frames"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
