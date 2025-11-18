@@ -47,6 +47,28 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        figma: {
+          border: "hsl(var(--figma-border))",
+          canvas: "hsl(var(--figma-canvas))",
+          toolbar: "hsl(var(--figma-toolbar))",
+          blue: "hsl(var(--figma-blue))",
+        },
+        message: {
+          mine: "hsl(var(--message-mine))",
+          other: "hsl(var(--message-other))",
+          ai: "hsl(var(--message-ai))",
+        },
+        task: {
+          todo: "hsl(var(--task-todo))",
+          progress: "hsl(var(--task-progress))",
+          review: "hsl(var(--task-review))",
+          done: "hsl(var(--task-done))",
+        },
+        severity: {
+          low: "hsl(var(--severity-low))",
+          medium: "hsl(var(--severity-medium))",
+          high: "hsl(var(--severity-high))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
