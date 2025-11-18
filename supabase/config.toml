@@ -1,1 +1,10 @@
 project_id = "esivaxvtyglotybaiabn"
+
+[functions.chat-ai]
+verify_jwt = false
+
+[functions.clarify-feedback]
+verify_jwt = false
+
+[functions.analyze-frame]
+verify_jwt = false
