@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Plus, LayoutGrid, List as ListIcon } from "lucide-react";
+import { LayoutGrid, List as ListIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BoardView } from "./tasks/BoardView";
 import { ListView } from "./tasks/ListView";
+import { CreateTaskDialog } from "./tasks/CreateTaskDialog";
 
 export const TasksTab = () => {
   const [view, setView] = useState<"board" | "list">("board");
@@ -30,10 +30,7 @@ export const TasksTab = () => {
             <ListIcon className="w-3.5 h-3.5" />
           </Button>
         </div>
-        <Button size="sm" className="h-7 text-xs">
-          <Plus className="w-3 h-3 mr-1" />
-          New Task
-        </Button>
+        <CreateTaskDialog />
       </div>
 
       {/* Content */}

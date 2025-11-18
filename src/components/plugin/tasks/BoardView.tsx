@@ -1,65 +1,95 @@
+import { useEffect, useState } from "react";
 import { MessageSquare, Bot, Hash, User } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Task {
   id: string;
   title: string;
-  frame: string;
-  assignee: string;
+  frame_name: string;
+  assignee_username: string;
   origin: "chat" | "feedback" | "ai";
-  dueDate: string;
+  due_date: string | null;
+  status: string;
 }
-
-const tasks: Record<string, Task[]> = {
-  todo: [
-    {
-      id: "1",
-      title: "Fix product grid spacing",
-      frame: "Products Page",
-      assignee: "Sarah",
-      origin: "ai",
-      dueDate: "Today"
-    },
-    {
-      id: "2",
-      title: "Update hero typography",
-      frame: "Home Page",
-      assignee: "Mike",
-      origin: "feedback",
-      dueDate: "Tomorrow"
-    }
-  ],
-  progress: [
-    {
-      id: "3",
-      title: "Improve form validation",
-      frame: "Checkout",
-      assignee: "You",
-      origin: "chat",
-      dueDate: "Today"
-    }
-  ],
-  review: [
-    {
-      id: "4",
-      title: "Color contrast check",
-      frame: "Wishlist",
-      assignee: "Sarah",
-      origin: "ai",
-      dueDate: "Yesterday"
-    }
-  ],
-  done: []
-};
 
 const columns = [
   { id: "todo", label: "To Do", color: "bg-task-todo" },
   { id: "progress", label: "In Progress", color: "bg-task-progress" },
   { id: "review", label: "Review", color: "bg-task-review" },
-  { id: "done", label: "Done", color: "bg-task-done" }
+  { id: "done", label: "Done", color: "bg-task-done" },
 ];
 
 export const BoardView = () => {
+  const [tasks, setTasks] = useState<Record<string, Task[]>>({
+    todo: [],
+    progress: [],
+    review: [],
+    done: [],
+  });
+
+  useEffect(() => {
+    loadTasks();
+    const channel = supabase
+      .channel("tasks-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tasks",
+        },
+        () => loadTasks()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const loadTasks = async () => {
+    const { data } = await supabase
+      .from("tasks")
+      .select(`
+        id,
+        title,
+        origin,
+        status,
+        due_date,
+        frame:frame_id(name),
+        assignee:assignee_id(username)
+      `)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      const tasksByStatus: Record<string, Task[]> = {
+        todo: [],
+        progress: [],
+        review: [],
+        done: [],
+      };
+
+      data.forEach((task: any) => {
+        const taskObj: Task = {
+          id: task.id,
+          title: task.title,
+          frame_name: task.frame?.name || "Unknown",
+          assignee_username: task.assignee?.username || "Unknown",
+          origin: task.origin,
+          due_date: task.due_date,
+          status: task.status,
+        };
+
+        if (tasksByStatus[task.status]) {
+          tasksByStatus[task.status].push(taskObj);
+        }
+      });
+
+      setTasks(tasksByStatus);
+    }
+  };
+
   const getOriginIcon = (origin: Task["origin"]) => {
     switch (origin) {
       case "chat":
@@ -69,6 +99,19 @@ export const BoardView = () => {
       case "ai":
         return <Bot className="w-2.5 h-2.5" />;
     }
+  };
+
+  const formatDueDate = (date: string | null) => {
+    if (!date) return "No due date";
+    const dueDate = new Date(date);
+    const today = new Date();
+    const diffDays = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    if (diffDays < 0) return `${Math.abs(diffDays)} days ago`;
+    return `In ${diffDays} days`;
   };
 
   return (
@@ -95,16 +138,16 @@ export const BoardView = () => {
                   </div>
                   <div className="flex items-center gap-1 mb-1">
                     <Hash className="w-2.5 h-2.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{task.frame}</span>
+                    <span className="text-xs text-muted-foreground">{task.frame_name}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <div className="w-4 h-4 rounded-full bg-primary text-white text-xs flex items-center justify-center">
-                        {task.assignee[0]}
+                        {task.assignee_username[0].toUpperCase()}
                       </div>
-                      <span className="text-xs text-muted-foreground">{task.assignee}</span>
+                      <span className="text-xs text-muted-foreground">{task.assignee_username}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{task.dueDate}</span>
+                    <span className="text-xs text-muted-foreground">{formatDueDate(task.due_date)}</span>
                   </div>
                 </div>
               ))}
