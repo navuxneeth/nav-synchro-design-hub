@@ -267,7 +267,7 @@ export const ChatTab = () => {
               className="h-5 w-5"
               onClick={() => setReplyingTo(null)}
             >
-              ×
+              <X className="w-3 h-3" />
             </Button>
           </div>
         )}
