@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Send, MoreHorizontal, Bot, Paperclip, Hash, X } from "lucide-react";
+import { Search, Send, MoreHorizontal, Bot, Paperclip, Hash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -24,14 +24,6 @@ interface Message {
   mentions?: string[];
   frames?: { name: string }[];
   profiles?: { username: string; avatar_color: string };
-  is_private?: boolean;
-  visible_to_users?: string[];
-  reply_to_id?: string;
-  user_id?: string;
-  reply_to?: {
-    author_name: string;
-    content: string;
-  };
 }
 
 interface Profile {
@@ -46,7 +38,6 @@ export const ChatTab = () => {
   const [inputValue, setInputValue] = useState("");
   const [showMentions, setShowMentions] = useState(false);
   const [isAIResponding, setIsAIResponding] = useState(false);
-  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -82,10 +73,7 @@ export const ChatTab = () => {
   const loadMessages = async () => {
     const { data, error } = await supabase
       .from('messages')
-      .select(`
-        *,
-        reply_to:reply_to_id(author_name, content)
-      `)
+      .select('*')
       .order('created_at', { ascending: true });
 
     if (error) {
@@ -119,8 +107,6 @@ export const ChatTab = () => {
 
     const content = inputValue;
     setInputValue("");
-    const replyToMessage = replyingTo;
-    setReplyingTo(null);
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -135,7 +121,6 @@ export const ChatTab = () => {
         author_name: profile?.username || 'You',
         content,
         type: 'user',
-        reply_to_id: replyToMessage?.id || null,
       });
 
     if (error) {
@@ -237,8 +222,6 @@ export const ChatTab = () => {
               author_name={message.author_name}
               content={message.content}
               avatar_color={message.profiles?.avatar_color}
-              reply_to={message.reply_to}
-              onReply={() => setReplyingTo(message)}
             />
           ))}
           {isAIResponding && (
@@ -255,22 +238,6 @@ export const ChatTab = () => {
       </ScrollArea>
 
       <div className="p-3 border-t border-figma-border">
-        {replyingTo && (
-          <div className="mb-2 p-2 bg-muted rounded-sm flex items-start justify-between">
-            <div className="flex-1 text-xs">
-              <div className="font-medium mb-1">Replying to {replyingTo.author_name}</div>
-              <div className="text-muted-foreground truncate">{replyingTo.content}</div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-5 w-5"
-              onClick={() => setReplyingTo(null)}
-            >
-              <X className="w-3 h-3" />
-            </Button>
-          </div>
-        )}
         {showMentions && (
           <div className="mb-2 p-2 bg-muted rounded text-xs space-y-1">
             {onlineProfiles.map((profile) => (

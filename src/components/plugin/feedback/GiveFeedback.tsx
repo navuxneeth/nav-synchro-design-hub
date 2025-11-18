@@ -132,26 +132,6 @@ export const GiveFeedback = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Get sender and recipient usernames
-      const { data: senderProfile } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", user.id)
-        .single();
-
-      const { data: recipientProfile } = await supabase
-        .from("profiles")
-        .select("username")
-        .eq("id", selectedUser)
-        .single();
-
-      const { data: frameData } = await supabase
-        .from("frames")
-        .select("name")
-        .eq("id", selectedFrame)
-        .single();
-
-      // Insert feedback
       const { error } = await supabase.from("feedback").insert({
         from_user_id: user.id,
         to_user_id: selectedUser,
@@ -162,24 +142,6 @@ export const GiveFeedback = () => {
       });
 
       if (error) throw error;
-
-      // Send private message in chat
-      const messageContent = `📋 **Feedback on ${frameData?.name || 'frame'}**\n\n${finalFeedback}`;
-      
-      const { error: messageError } = await supabase.from("messages").insert({
-        user_id: user.id,
-        author_name: senderProfile?.username || "You",
-        content: messageContent,
-        type: "user",
-        is_private: true,
-        visible_to_users: [user.id, selectedUser],
-        mentions: [`@${recipientProfile?.username}`],
-      });
-
-      if (messageError) {
-        console.error("Failed to send chat message:", messageError);
-        // Don't throw error, feedback was sent successfully
-      }
 
       toast({
         title: "Feedback sent!",
