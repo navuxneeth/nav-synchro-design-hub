@@ -50,47 +50,55 @@ export const AskAITab = () => {
     if (!selectedFrame) return;
 
     setIsAnalyzing(true);
-    try {
-      const frame = frames.find((f) => f.id === selectedFrame);
-      const { data, error } = await supabase.functions.invoke("analyze-frame", {
-        body: {
-          frameName: frame?.name || "Unknown",
-          analysisType,
-        },
-      });
-
-      if (error) throw error;
-
-      // Save results to database
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && data) {
-        await Promise.all(
-          data.map((result: AnalysisResult) =>
-            supabase.from("analysis_results").insert({
-              frame_id: selectedFrame,
-              analysis_type: analysisType,
-              issue: result.issue,
-              severity: result.severity,
-              suggestion: result.suggestion,
-            })
-          )
-        );
-      }
-
-      setResults(data);
+    
+    // Simulate analysis with mock results based on analysis type
+    setTimeout(() => {
+      const mockResults = getMockResults(analysisType);
+      setResults(mockResults);
+      setIsAnalyzing(false);
+      
       toast({
         title: "Analysis complete",
-        description: `Found ${data.length} potential improvements`,
+        description: `Found ${mockResults.length} potential improvements`,
       });
-    } catch (error: any) {
-      toast({
-        title: "Analysis failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
+    }, 1500);
+  };
+
+  const getMockResults = (type: string): AnalysisResult[] => {
+    const resultsMap: Record<string, AnalysisResult[]> = {
+      layout: [
+        { issue: "Inconsistent padding on card components", severity: "Medium", suggestion: "Apply 16px padding consistently across all card components to maintain visual rhythm" },
+        { issue: "Uneven spacing between sections", severity: "High", suggestion: "Use multiples of 8px for spacing to create a harmonious layout grid" },
+        { issue: "Content not aligned to grid", severity: "Low", suggestion: "Align elements to a 12-column grid for better structure" }
+      ],
+      typography: [
+        { issue: "Multiple font weights used inconsistently", severity: "High", suggestion: "Standardize to 400 (regular) for body and 600 (semibold) for headings" },
+        { issue: "Line height too tight for body text", severity: "Medium", suggestion: "Increase line height to 1.5 for improved readability" },
+        { issue: "Font sizes don't follow a scale", severity: "Low", suggestion: "Use a type scale like 12, 14, 16, 20, 24, 32, 48px" }
+      ],
+      color: [
+        { issue: "Low contrast text on background", severity: "High", suggestion: "Ensure text has at least 4.5:1 contrast ratio for WCAG AA compliance" },
+        { issue: "Too many color variations", severity: "Medium", suggestion: "Limit to primary, secondary, and accent colors with defined shades" },
+        { issue: "Inconsistent use of semantic colors", severity: "Low", suggestion: "Use green for success, red for errors, yellow for warnings consistently" }
+      ],
+      accessibility: [
+        { issue: "Missing alt text on images", severity: "High", suggestion: "Add descriptive alt text to all images for screen reader users" },
+        { issue: "Interactive elements lack focus states", severity: "High", suggestion: "Add visible focus indicators for keyboard navigation" },
+        { issue: "Touch targets too small", severity: "Medium", suggestion: "Ensure buttons and links are at least 44x44px for touch accessibility" }
+      ],
+      hierarchy: [
+        { issue: "Visual hierarchy unclear", severity: "High", suggestion: "Use size, weight, and color to establish clear importance levels" },
+        { issue: "Too many competing focal points", severity: "Medium", suggestion: "Emphasize one primary action per section" },
+        { issue: "Headings don't follow logical order", severity: "Low", suggestion: "Use H1, H2, H3 in proper sequence without skipping levels" }
+      ],
+      consistency: [
+        { issue: "Button styles vary across pages", severity: "High", suggestion: "Create a consistent button component library with defined variants" },
+        { issue: "Icon sizes are inconsistent", severity: "Medium", suggestion: "Standardize icon sizes to 16px or 24px throughout the design" },
+        { issue: "Different input field styles", severity: "Medium", suggestion: "Use a single input field design pattern across all forms" }
+      ]
+    };
+
+    return resultsMap[type] || resultsMap.layout;
   };
 
   const handleAddAsTask = async (result: AnalysisResult) => {

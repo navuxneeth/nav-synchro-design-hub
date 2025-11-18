@@ -81,8 +81,22 @@ export const ReceivedFeedback = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      toast({
+        title: "Creating task...",
+        description: "AI is refining your feedback",
+      });
+
+      // Use AI to refine feedback into a clear task
+      const { data: clarifiedData, error: aiError } = await supabase.functions.invoke("clarify-feedback", {
+        body: { feedback: `${item.summary}: ${item.details}` },
+      });
+
+      if (aiError) throw aiError;
+
+      const taskTitle = clarifiedData?.clarifiedFeedback || item.summary;
+
       const { error } = await supabase.from("tasks").insert({
-        title: item.summary,
+        title: taskTitle,
         frame_id: item.frame_id,
         assignee_id: user.id,
         origin: "feedback",
@@ -93,7 +107,7 @@ export const ReceivedFeedback = () => {
 
       toast({
         title: "Task created!",
-        description: "Feedback added to your task list",
+        description: "AI-refined feedback added to your task list",
       });
     } catch (error: any) {
       toast({

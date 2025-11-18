@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@/components/ui/avatar";
+import { PersonDetail } from "./PersonDetail";
 
 interface Person {
   id: string;
@@ -47,44 +48,50 @@ const people: Person[] = [
 
 export const PeopleView = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-3">
-        {people.map((person) => (
-          <div
-            key={person.id}
-            className="p-3 border border-figma-border rounded-sm hover:border-primary/50 transition-colors"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Avatar className={`w-8 h-8 ${person.color} text-white text-xs flex items-center justify-center`}>
-                  {person.initial}
-                </Avatar>
-                <div>
-                  <div className="text-xs font-medium">{person.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {person.framesCount} frames touched
+    <>
+      <ScrollArea className="h-full">
+        <div className="p-4 space-y-3">
+          {people.map((person) => (
+            <div
+              key={person.id}
+              className="p-3 border border-figma-border rounded-sm hover:border-primary/50 transition-colors cursor-pointer"
+              onClick={() => setSelectedPerson(person)}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Avatar className={`w-8 h-8 ${person.color} text-white text-xs flex items-center justify-center`}>
+                    {person.initial}
+                  </Avatar>
+                  <div>
+                    <div className="text-xs font-medium">{person.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {person.framesCount} frames touched
+                    </div>
                   </div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleExpand(person.id);
+                  }}
+                >
+                  {expandedId === person.id ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => toggleExpand(person.id)}
-              >
-                {expandedId === person.id ? (
-                  <ChevronUp className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
-              </Button>
-            </div>
 
             {/* Contribution Heatmap */}
             <div className="flex gap-1 mb-3">
@@ -148,5 +155,14 @@ export const PeopleView = () => {
         ))}
       </div>
     </ScrollArea>
+
+    {selectedPerson && (
+      <PersonDetail
+        person={selectedPerson}
+        isOpen={!!selectedPerson}
+        onClose={() => setSelectedPerson(null)}
+      />
+    )}
+    </>
   );
 };
