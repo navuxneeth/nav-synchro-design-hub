@@ -1,17 +1,23 @@
 import ReactMarkdown from "react-markdown";
 import { Avatar } from "@/components/ui/avatar";
-import { Bot } from "lucide-react";
+import { Bot, Reply } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ChatMessageProps {
   type: "user" | "ai";
   author_name: string;
   content: string;
   avatar_color?: string;
+  reply_to?: {
+    author_name: string;
+    content: string;
+  };
+  onReply?: () => void;
 }
 
-export const ChatMessage = ({ type, author_name, content, avatar_color }: ChatMessageProps) => {
+export const ChatMessage = ({ type, author_name, content, avatar_color, reply_to, onReply }: ChatMessageProps) => {
   return (
-    <div className={`flex gap-2 py-2 px-3 rounded-lg ${type === "ai" ? "bg-primary/5 border border-primary/20" : "bg-muted/30"}`}>
+    <div className={`flex gap-2 py-2 px-3 rounded-lg group ${type === "ai" ? "bg-primary/5 border border-primary/20" : "bg-muted/30"}`}>
       <Avatar className={`w-6 h-6 ${type === "ai" ? "bg-primary" : avatar_color} text-white text-xs flex items-center justify-center shrink-0`}>
         {type === "ai" ? <Bot className="w-3 h-3" /> : author_name[0].toUpperCase()}
       </Avatar>
@@ -26,6 +32,12 @@ export const ChatMessage = ({ type, author_name, content, avatar_color }: ChatMe
             </span>
           )}
         </div>
+        {reply_to && (
+          <div className="mb-2 pl-2 border-l-2 border-muted-foreground/30 text-xs text-muted-foreground">
+            <div className="font-medium">{reply_to.author_name}</div>
+            <div className="truncate">{reply_to.content}</div>
+          </div>
+        )}
         {type === "ai" ? (
           <div className="text-xs text-foreground prose prose-sm max-w-none">
             <ReactMarkdown
@@ -48,9 +60,28 @@ export const ChatMessage = ({ type, author_name, content, avatar_color }: ChatMe
             </ReactMarkdown>
           </div>
         ) : (
-          <p className="text-xs text-foreground whitespace-pre-wrap">{content}</p>
+          <div className="text-xs text-foreground whitespace-pre-wrap">
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+              }}
+            >
+              {content}
+            </ReactMarkdown>
+          </div>
         )}
       </div>
+      {onReply && type === "user" && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={onReply}
+        >
+          <Reply className="w-3 h-3" />
+        </Button>
+      )}
     </div>
   );
 };
