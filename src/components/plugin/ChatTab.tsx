@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { ChatMessage } from "./ChatMessage";
 
 interface Message {
   id: string;
@@ -213,76 +214,23 @@ export const ChatTab = () => {
       </div>
 
       <ScrollArea className="flex-1 p-3" ref={scrollRef}>
-        <div className="space-y-3">
+        <div className="space-y-1">
           {messages.map((message) => (
-            <div
+            <ChatMessage
               key={message.id}
-              className={`group relative ${
-                message.type === "user" ? "ml-8" : ""
-              }`}
-            >
-              <div
-                className={`p-2 rounded text-xs ${
-                  message.type === "user"
-                    ? "bg-message-mine ml-auto"
-                    : "bg-message-ai"
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  {message.type === "ai" && <Bot className="w-3 h-3" />}
-                  <span className="font-medium">{message.author_name}</span>
-                  <span className="text-muted-foreground">{formatTime(message.created_at)}</span>
-                </div>
-                <p className="text-foreground">
-                  {message.content.split(/(@\w+)/).map((part, i) =>
-                    part.startsWith("@") ? (
-                      <span key={i} className="text-primary font-medium">
-                        {part}
-                      </span>
-                    ) : (
-                      part
-                    )
-                  )}
-                </p>
-                {message.frames && message.frames.length > 0 && (
-                  <div className="flex gap-1 mt-2">
-                    {message.frames.map((frame, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-xs"
-                      >
-                        <Hash className="w-2.5 h-2.5" />
-                        {frame.name}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                      <MoreHorizontal className="w-3 h-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="text-xs">Reply</DropdownMenuItem>
-                    <DropdownMenuItem className="text-xs">AI Assist</DropdownMenuItem>
-                    <DropdownMenuItem className="text-xs">Give Structured Feedback</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+              type={message.type}
+              author_name={message.author_name}
+              content={message.content}
+              avatar_color={message.profiles?.avatar_color}
+            />
           ))}
           {isAIResponding && (
-            <div>
-              <div className="p-2 rounded text-xs bg-message-ai">
-                <div className="flex items-center gap-2 mb-1">
-                  <Bot className="w-3 h-3" />
-                  <span className="font-medium">AI Assistant</span>
-                </div>
-                <p className="text-muted-foreground">Thinking...</p>
+            <div className="flex gap-2 py-2 px-3">
+              <Avatar className="w-6 h-6 bg-primary text-white text-xs flex items-center justify-center shrink-0">
+                <Bot className="w-3 h-3" />
+              </Avatar>
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground italic">AI is thinking...</p>
               </div>
             </div>
           )}

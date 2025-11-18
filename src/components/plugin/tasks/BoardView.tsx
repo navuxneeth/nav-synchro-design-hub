@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { MessageSquare, Bot, Hash, User } from "lucide-react";
+import { MessageSquare, Bot, Hash } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Task {
   id: string;
@@ -27,6 +28,8 @@ export const BoardView = () => {
     review: [],
     done: [],
   });
+  const [draggedTask, setDraggedTask] = useState<Task | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     loadTasks();
@@ -90,70 +93,111 @@ export const BoardView = () => {
     }
   };
 
+  const handleDragStart = (task: Task) => {
+    setDraggedTask(task);
+  };
+
+  const handleDragEnd = async (newStatus: string) => {
+    if (!draggedTask || draggedTask.status === newStatus) {
+      setDraggedTask(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("tasks")
+      .update({ status: newStatus })
+      .eq("id", draggedTask.id);
+
+    if (error) {
+      toast({
+        title: "Failed to move task",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Task moved",
+        description: `Moved to ${columns.find((c) => c.id === newStatus)?.label}`,
+      });
+    }
+
+    setDraggedTask(null);
+  };
+
   const getOriginIcon = (origin: Task["origin"]) => {
     switch (origin) {
       case "chat":
-        return <MessageSquare className="w-2.5 h-2.5" />;
+        return <MessageSquare className="w-3 h-3" />;
       case "feedback":
-        return <Hash className="w-2.5 h-2.5" />;
+        return <Hash className="w-3 h-3" />;
       case "ai":
-        return <Bot className="w-2.5 h-2.5" />;
+        return <Bot className="w-3 h-3" />;
     }
-  };
-
-  const formatDueDate = (date: string | null) => {
-    if (!date) return "No due date";
-    const dueDate = new Date(date);
-    const today = new Date();
-    const diffDays = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Tomorrow";
-    if (diffDays === -1) return "Yesterday";
-    if (diffDays < 0) return `${Math.abs(diffDays)} days ago`;
-    return `In ${diffDays} days`;
   };
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-3 space-y-4">
-        {columns.map((column) => (
-          <div key={column.id} className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${column.color}`} />
-              <h3 className="text-xs font-medium">{column.label}</h3>
-              <span className="text-xs text-muted-foreground">
-                {tasks[column.id].length}
-              </span>
-            </div>
-            <div className="space-y-2">
-              {tasks[column.id].map((task) => (
-                <div
-                  key={task.id}
-                  className="p-2 border border-figma-border rounded-sm bg-background cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-xs font-medium flex-1">{task.title}</span>
-                    {getOriginIcon(task.origin)}
-                  </div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <Hash className="w-2.5 h-2.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{task.frame_name}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <div className="w-4 h-4 rounded-full bg-primary text-white text-xs flex items-center justify-center">
-                        {task.assignee_username[0].toUpperCase()}
-                      </div>
-                      <span className="text-xs text-muted-foreground">{task.assignee_username}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{formatDueDate(task.due_date)}</span>
-                  </div>
+      <div className="p-4">
+        <div className="grid grid-cols-4 gap-3">
+          {columns.map((column) => (
+            <div
+              key={column.id}
+              className="min-h-[400px]"
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.add("bg-primary/5");
+              }}
+              onDragLeave={(e) => {
+                e.currentTarget.classList.remove("bg-primary/5");
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("bg-primary/5");
+                handleDragEnd(column.id);
+              }}
+            >
+              <div className="mb-3">
+                <div className={`h-1 ${column.color} rounded-full mb-2`} />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium">{column.label}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {tasks[column.id]?.length || 0}
+                  </span>
                 </div>
-              ))}
+              </div>
+
+              <div className="space-y-2">
+                {tasks[column.id]?.map((task) => (
+                  <div
+                    key={task.id}
+                    draggable
+                    onDragStart={() => handleDragStart(task)}
+                    onDragEnd={() => setDraggedTask(null)}
+                    className={`p-2 border border-figma-border rounded-sm bg-background hover:border-primary/50 transition-colors cursor-move ${
+                      draggedTask?.id === task.id ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-1">
+                      <span className="text-xs font-medium flex-1 pr-2">
+                        {task.title}
+                      </span>
+                      <span className="shrink-0">{getOriginIcon(task.origin)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Hash className="w-2.5 h-2.5" />
+                        {task.frame_name}
+                      </span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      @{task.assignee_username}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </ScrollArea>
   );

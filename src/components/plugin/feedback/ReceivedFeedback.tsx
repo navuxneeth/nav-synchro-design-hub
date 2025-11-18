@@ -13,6 +13,7 @@ interface FeedbackItem {
   details: string;
   created_at: string;
   frame_id: string;
+  to_user_id: string;
 }
 
 export const ReceivedFeedback = () => {
@@ -52,6 +53,7 @@ export const ReceivedFeedback = () => {
         details,
         created_at,
         frame_id,
+        to_user_id,
         from_user:from_user_id(username),
         frame:frame_id(name)
       `)
@@ -67,6 +69,7 @@ export const ReceivedFeedback = () => {
         details: item.details,
         created_at: new Date(item.created_at).toLocaleString(),
         frame_id: item.frame_id,
+        to_user_id: item.to_user_id,
       }));
       setFeedbackItems(items);
     }
