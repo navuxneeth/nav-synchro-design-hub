@@ -1,13 +1,15 @@
 import { 
   MousePointer2, Square, Pen, Type, Circle,
-  Share2, User
+  Share2, LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 export const FigmaCanvas = () => {
+  const { signOut } = useAuth();
+
   return (
     <div className="flex-1 flex flex-col">
-      {/* Top Bar */}
       <div className="h-12 bg-figma-toolbar border-b border-figma-border flex items-center px-3 gap-3">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -25,14 +27,18 @@ export const FigmaCanvas = () => {
           <Share2 className="w-3 h-3 mr-1" />
           Share
         </Button>
-        <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium">
-          <User className="w-4 h-4" />
-        </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-7 w-7"
+          onClick={signOut}
+          title="Sign out"
+        >
+          <LogOut className="w-4 h-4" />
+        </Button>
       </div>
 
-      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Toolbar */}
         <div className="w-12 bg-figma-toolbar border-r border-figma-border flex flex-col items-center py-3 gap-1">
           <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground">
             <MousePointer2 className="w-4 h-4" />
@@ -51,10 +57,8 @@ export const FigmaCanvas = () => {
           </Button>
         </div>
 
-        {/* Canvas Area */}
         <div className="flex-1 bg-background relative p-12 overflow-auto">
           <div className="grid grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Frame Cards */}
             {["Home Page", "Products Page", "Checkout", "Wishlist"].map((frame) => (
               <div
                 key={frame}
